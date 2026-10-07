@@ -1,6 +1,6 @@
 {
   "name": "timezest",
-  "version": "2.1.6",
+  "version": "3.0.0",
   "main": "dist/index.js",
   "files": [
     "dist",

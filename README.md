@@ -91,14 +91,14 @@ timeZest.getAppointmentTypes(filter: TQLFilter | string | null = null): Promise<
 // Retrieve all resources
 timeZest.getResources(filter: TQLFilter | string | null = null): Promise<Resource[]>
 
-// Retreive all scheduling reuests
+// Retrieve all scheduling requests
 timeZest.getSchedulingRequests(filter: TQLFilter | string | null = null): Promise<SchedulingRequest[]>
 
 // Retrieve a scheduling request by id
 timeZest.getSchedulingRequest(id: string): Promise<SchedulingRequest>
 
 // Create a scheduling request
-timeZest.createSchedulingRequest(data: SchedulingRequest): Promise<SchedulingRequest>
+timeZest.createSchedulingRequest(data: SchedulingRequestPost): Promise<SchedulingRequest>
 
 // Retrieve all teams
 timeZest.getTeams(filter: TQLFilter | string | null = null): Promise<Team[]>
@@ -118,27 +118,45 @@ import TimeZestAPI, { TQL } from "timezest";
 
 const timeZest = new TimeZestAPI("your-api-key");
 
-// 1) Type-safe builder with autocomplete
+// 1) Type-safe builder: offers only the attributes TimeZest accepts
 const teams = await timeZest.getTeams(
-  TQL.forTeams().filter("internal_name").eq("Tier1")
+  TQL.forTeams().filter("internal_name").eq("Tier1"),
 );
 
-// You can also chain logical operators
+// Predicates joined with AND must all match
 const scheduledRequests = await timeZest.getSchedulingRequests(
   TQL.forSchedulingRequests()
-    .filter("status").eq("scheduled")
-    .and("end_user_email").like("@example.com")
+    .filter("status")
+    .eq("scheduled")
+    .and("end_user_email")
+    .like("@example.com"),
+);
+
+// An agent's or a team's scheduling requests, by its id
+const agentRequests = await timeZest.getSchedulingRequests(
+  TQL.forSchedulingRequests()
+    .filter("agent")
+    .eq("agnt_2FLuERxvOVglKiEzLbqW7")
+    .and("status")
+    .in(["sent", "scheduled"]),
 );
 
 // 2) Raw TQL string
-const teamsByString = await timeZest.getTeams("team.internal_name EQ Tier1");
+const teamsByString = await timeZest.getTeams("team.internal_name~EQ~Tier1");
 ```
+
+Notes on how the API reads a filter:
+
+- **Write raw filters with `~` between parts.** TimeZest reads the value of a predicate written with spaces up to the end of the filter, so `a EQ x AND b EQ y` compares `a` with `x AND b EQ y`. The builder's `toString()` always writes the `~` form.
+- **There is no `OR`** between predicates; TimeZest refuses it. `in([...])` matches any of several values of one attribute.
+- **Only the attributes in `TQL_ATTRIBUTES` can be filtered on**; TimeZest refuses any other. For scheduling requests, `agent` and `team` take an agent's or team's id. TimeZest's reference names them `agent_id` and `team_id`, which the API refuses. The API also accepts `appointment_type_id`, which the reference leaves out.
+- **`IN` on a ticket number matches the number with its `#`** (`connectwise_psa_ticket_number~IN~#1234,#1235`); `EQ` matches it with or without.
 
 For more about TQL syntax, see the TimeZest TQL documentation: `https://developer.timezest.com/tql/`.
 
 ### Paginated Requests
 
-For endpoints that return paginated data, the library automatically handles pagination:
+List methods read every page. TimeZest returns 20 items per page and names the next page's URL, filter included; the library follows those links until there are none:
 
 ```typescript
 async function fetchAllResources() {
@@ -151,6 +169,22 @@ async function fetchAllResources() {
 }
 
 fetchAllResources();
+```
+
+## Errors
+
+A request TimeZest answers with an error status throws a `TimeZestHttpError`, whose `status` is the HTTP status and whose message is TimeZest's own (or `HTTP <status>`). A `429` is retried, as described below, until `maxRetryTimeMs` runs out, which then throws an `Error`. A request with no answer throws an `Error`.
+
+```typescript
+import { TimeZestHttpError } from "timezest";
+
+try {
+  await timeZest.getSchedulingRequest("sreq_123");
+} catch (error) {
+  if (error instanceof TimeZestHttpError && error.status === 404) {
+    // No such scheduling request.
+  }
+}
 ```
 
 ## Rate Limiting and Retry Logic
