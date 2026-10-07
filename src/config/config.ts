@@ -1,4 +1,4 @@
-import { defaultLogger, LogLevel, Logger } from "../utils/logger";
+import { defaultLogger, LogLevel, Logger } from '../utils/logger';
 
 /**
  * Configuration options for the TimeZest API client.
@@ -42,9 +42,9 @@ export interface TimeZestAPIConfig {
  * Retry strategy: Aggressive exponential backoff with jitter
  */
 export const CONFIG: TimeZestAPIConfig = {
-  logLevel: "error",
+  logLevel: 'error',
   logger: defaultLogger,
-  baseUrl: "https://api.timezest.com/v1",
+  baseUrl: 'https://api.timezest.com/v1',
   maxRetryDelayMs: 60 * 1000, // 60 seconds (aligned with rate limit window)
   maxRetryTimeMs: 5 * 60 * 1000, // 5 minutes (be patient with retries)
   outputValidation: true,

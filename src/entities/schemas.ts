@@ -1,8 +1,14 @@
-import { z } from "zod";
+import { z } from 'zod';
+
+/**
+ * The shapes the TimeZest API returns, as it returns them. A field TimeZest
+ * leaves `null` until something happens (a team without a URL slug, a request
+ * nobody has booked) is nullable here.
+ */
 
 export const AgentSchema = z.object({
   id: z.string(),
-  object: z.string(),
+  object: z.literal('agent'),
   name: z.string(),
   email: z.string(),
   role: z.string(),
@@ -13,9 +19,22 @@ export const AgentSchema = z.object({
   updated_at: z.number(),
 });
 
+export const TeamSchema = z.object({
+  id: z.string(),
+  object: z.literal('team'),
+  internal_name: z.string(),
+  external_name: z.string(),
+  team_type: z.string(),
+  url_slug: z.string().nullable(),
+  created_at: z.number(),
+  updated_at: z.number(),
+});
+
+/** A schedulable resource: an agent or a team, told apart by `object`. */
+export const ResourceSchema = z.discriminatedUnion('object', [AgentSchema, TeamSchema]);
+
 export const AppointmentTypeSchema = z.object({
   id: z.string(),
-  object: z.string(),
   internal_name: z.string(),
   external_name: z.string(),
   duration_mins: z.number(),
@@ -24,44 +43,47 @@ export const AppointmentTypeSchema = z.object({
   updated_at: z.number(),
 });
 
-export const ResourceSchema = z.object({
+/** An agent or team named on a scheduling request. */
+export const SchedulingRequestResourceSchema = z.object({
   id: z.string(),
   object: z.string(),
   name: z.string(),
-  email: z.string(),
-  role: z.string(),
-  schedulable: z.boolean(),
-  two_factor_enabled: z.boolean(),
-  url_slug: z.string(),
-  created_at: z.number(),
-  updated_at: z.number(),
 });
 
+/**
+ * A PSA record a scheduling request is associated with. Tickets carry their
+ * `number`; companies and contacts carry only their `id`.
+ */
+export const AssociatedEntitySchema = z.object({
+  type: z.string(),
+  id: z.number(),
+  number: z.string().optional(),
+});
+
+/**
+ * A scheduling request. Until the end user books a time, `scheduled_at`,
+ * `selected_start_time` and `selected_time_zone` are `null`; the scheduling
+ * window fields are `null` unless the request was created with them.
+ */
 export const SchedulingRequestSchema = z.object({
   id: z.string(),
-  object: z.string(),
+  object: z.literal('scheduling_request'),
   appointment_type_id: z.string(),
   end_user_email: z.string(),
   end_user_name: z.string(),
-  associated_entities: z.array(
-    z.object({
-      type: z.string(),
-      id: z.number(),
-      number: z.string().optional(),
-    }),
-  ),
-  resources: z.array(
-    z.object({
-      type: z.string(),
-      id: z.string(),
-      name: z.string(),
-    }),
-  ),
-  scheduled_agents: z.array(z.unknown()),
-  scheduled_at: z.number(),
+  associated_entities: z.array(AssociatedEntitySchema),
+  resources: z.array(SchedulingRequestResourceSchema),
+  scheduled_agents: z.array(SchedulingRequestResourceSchema),
+  duration_mins: z.number(),
+  earliest_date: z.string().nullable(),
+  earliest_time: z.string().nullable(),
+  latest_date: z.string().nullable(),
+  latest_time: z.string().nullable(),
+  guests_list: z.array(z.unknown()),
+  scheduled_at: z.number().nullable(),
   scheduling_url: z.string(),
-  selected_start_time: z.number(),
-  selected_time_zone: z.string(),
+  selected_start_time: z.number().nullable(),
+  selected_time_zone: z.string().nullable(),
   status: z.string(),
   created_at: z.number(),
   updated_at: z.number(),
@@ -84,15 +106,4 @@ export const SchedulingRequestPostSchema = z.object({
   trigger_mode: z.string(),
   associated_entities: z.array(AssociatedEntityPostSchema),
   resource_ids: z.array(z.string()),
-});
-
-export const TeamSchema = z.object({
-  id: z.string(),
-  object: z.string(),
-  internal_name: z.string(),
-  external_name: z.string(),
-  team_type: z.string(),
-  url_slug: z.string(),
-  created_at: z.number(),
-  updated_at: z.number(),
 });

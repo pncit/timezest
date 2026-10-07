@@ -40,15 +40,7 @@ export interface Logger {
 /**
  * Represents the available log levels and their priorities.
  */
-export type LogLevel =
-  | "silent"
-  | "error"
-  | "warn"
-  | "info"
-  | "http"
-  | "verbose"
-  | "debug"
-  | "silly";
+export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
 
 /**
  * A mapping of log levels to their priority values.
@@ -69,20 +61,13 @@ export const logLevelPriority: Record<LogLevel, number> = {
  */
 export const defaultLogger: Logger = {
   silent: (_message: string, _data?: any) => {},
-  error: (message: string, data?: any) =>
-    data ? console.error(message, data) : console.error(message),
-  warn: (message: string, data?: any) =>
-    data ? console.warn(message, data) : console.warn(message),
-  info: (message: string, data?: any) =>
-    data ? console.info(message, data) : console.info(message),
-  http: (message: string, data?: any) =>
-    data ? console.log(message, data) : console.log(message),
-  verbose: (message: string, data?: any) =>
-    data ? console.debug(message, data) : console.debug(message),
-  debug: (message: string, data?: any) =>
-    data ? console.debug(message, data) : console.debug(message),
-  silly: (message: string, data?: any) =>
-    data ? console.debug(message, data) : console.debug(message),
+  error: (message: string, data?: any) => (data ? console.error(message, data) : console.error(message)),
+  warn: (message: string, data?: any) => (data ? console.warn(message, data) : console.warn(message)),
+  info: (message: string, data?: any) => (data ? console.info(message, data) : console.info(message)),
+  http: (message: string, data?: any) => (data ? console.log(message, data) : console.log(message)),
+  verbose: (message: string, data?: any) => (data ? console.debug(message, data) : console.debug(message)),
+  debug: (message: string, data?: any) => (data ? console.debug(message, data) : console.debug(message)),
+  silly: (message: string, data?: any) => (data ? console.debug(message, data) : console.debug(message)),
 };
 
 /**
@@ -93,7 +78,7 @@ export const defaultLogger: Logger = {
  */
 export function buildLogger(
   logger: Logger,
-  logLevel: LogLevel,
+  logLevel: LogLevel
 ): (level: LogLevel, message: string, data?: any) => void {
   return (level: LogLevel, message: string, data?: any): void => {
     if (logLevelPriority[level] <= logLevelPriority[logLevel]) {
@@ -112,24 +97,24 @@ export function buildLogger(
 export function withLogging<T>(
   fn: (...args: any[]) => Promise<T>,
   instance: { log: (level: LogLevel, message: string, data?: any) => void },
-  functionName: string,
+  functionName: string
 ): (...args: any[]) => Promise<T> {
   return async (...args: any[]) => {
-    instance.log("debug", `Entering ${functionName}`);
+    instance.log('debug', `Entering ${functionName}`);
     if (args) {
-      instance.log("silly", `Entering ${functionName}`, { args });
+      instance.log('silly', `Entering ${functionName}`, { args });
     }
     try {
       const result = await fn(...args);
-      instance.log("debug", `Exiting ${functionName} successfully`);
+      instance.log('debug', `Exiting ${functionName} successfully`);
       if (result) {
-        instance.log("silly", `Exiting ${functionName} successfully`, {
+        instance.log('silly', `Exiting ${functionName} successfully`, {
           result,
         });
       }
       return result;
     } catch (error) {
-      instance.log("error", `Error in ${functionName}`, { error });
+      instance.log('error', `Error in ${functionName}`, { error });
       throw error;
     }
   };
