@@ -1,64 +1,69 @@
-import { makeRequest } from "./makeRequest";
-import { handleError } from "./handleError";
+import { makeRequest, endpointUrl } from "./makeRequest";
 import { apiEndpoint } from "../constants/endpoints";
 import { TimeZestAPI } from "../index";
 import { TQLFilter, normalizeFilter } from "./tqlFilter";
 
+/** One page of a TimeZest list: up to 20 items, and the URL of the next page. */
+type ListPage<T> = { data: T[]; next_page: string | null };
+
 /**
- * Makes a paginated API request.
- * @template T - The type of the response data.
+ * Reads every page of a list endpoint.
+ *
+ * The filter goes in the query string. TimeZest pages by cursor: each page
+ * names the URL of the next one in `next_page`, filter included, and the last
+ * page names none. A `next_page` on another origin is refused, because the API
+ * key is sent with every request, and so is one that names the page just read,
+ * because following it would never end.
+ *
+ * @template T - The type of the items listed.
  * @param apiInstance - The instance of the TimeZestAPI.
- * @param endpoint - The API endpoint to call.
- * @param method - The HTTP method (GET or POST).
- * @param data - The request payload.
+ * @param endpoint - The list endpoint to read.
  * @param filter - An optional filter string or TQLFilter instance.
- * @returns A promise that resolves to an array of response data.
+ * @returns A promise that resolves to every item of every page.
  */
 export const makePaginatedRequest = async <T>(
   apiInstance: TimeZestAPI,
   endpoint: apiEndpoint,
-  method: "GET" | "POST" = "GET",
-  data: any = null,
   filter: TQLFilter | string | null = null,
 ): Promise<T[]> => {
   const { log } = apiInstance;
   const apiKey = apiInstance.getApiKey();
   const { baseUrl, maxRetryTimeMs, maxRetryDelayMs } = apiInstance.getConfig();
+  const origin = new URL(baseUrl).origin;
+  const query = normalizeFilter(filter);
 
-  let results: any[] = [];
-  let nextPage: number | null = 1;
+  let results: T[] = [];
+  let url: string | null = endpointUrl(
+    baseUrl,
+    endpoint,
+    query === null ? {} : { filter: query },
+  );
 
-  try {
-    do {
-      log("debug", `Fetching page ${nextPage} for ${endpoint}`);
-      const response: { data: any[]; next_page: number | null } =
-        await makeRequest<{
-          data: any[];
-          next_page: number | null;
-        }>(
-          log,
-          apiKey,
-          baseUrl,
-          endpoint,
-          method,
-          { ...data, filter: normalizeFilter(filter), page: nextPage },
-          maxRetryTimeMs,
-          maxRetryDelayMs,
-        );
-
-      log("http", `Page ${nextPage} fetched successfully for ${endpoint}`);
-      results = results.concat(response.data);
-      nextPage = response.next_page;
-    } while (nextPage);
-
-    log("http", `Paginated request to ${endpoint} completed successfully`);
-    return results;
-  } catch (error: any) {
-    log(
-      "error",
-      `Paginated request to ${endpoint} failed with error: '${error.message}'`,
+  while (url !== null) {
+    log("debug", `Fetching ${url}`);
+    const page: ListPage<T> = await makeRequest<ListPage<T>>(
+      log,
+      apiKey,
+      url,
+      "GET",
+      null,
+      maxRetryTimeMs,
+      maxRetryDelayMs,
     );
-    handleError(log, error);
+    results = results.concat(page.data);
+
+    const next = page.next_page;
+    if (next !== null && new URL(next).origin !== origin) {
+      throw new Error(
+        `TimeZest named a next page outside ${origin}; it was not followed.`,
+      );
+    }
+    if (next === url) {
+      throw new Error(`TimeZest named ${url} as its own next page.`);
+    }
+    url = next;
   }
+
+  log("http", `Paginated request to ${endpoint} completed successfully`);
   return results;
 };

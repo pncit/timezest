@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   AssociatedEntityPostSchema,
+  ResourceSchema,
   SchedulingRequestPostSchema,
+  SchedulingRequestSchema,
+  TeamSchema,
 } from "../entities/schemas";
+import { agent, bookedRequest, team, unbookedRequest } from "./fixtures";
 
 describe("AssociatedEntityPostSchema", () => {
   it("accepts a ticket-style entity identified by number", () => {
@@ -70,5 +74,33 @@ describe("SchedulingRequestPostSchema", () => {
       resource_ids: ["67890"],
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("SchedulingRequestSchema", () => {
+  it("accepts a request nobody has booked, whose booking fields are null", () => {
+    expect(SchedulingRequestSchema.safeParse(unbookedRequest).success).toBe(
+      true,
+    );
+  });
+
+  it("accepts a booked request", () => {
+    expect(SchedulingRequestSchema.safeParse(bookedRequest).success).toBe(true);
+  });
+});
+
+describe("ResourceSchema", () => {
+  it("accepts an agent and a team, told apart by object", () => {
+    const parsed = [agent, team].map((resource) =>
+      ResourceSchema.parse(resource),
+    );
+    expect(parsed.map((resource) => resource.object)).toEqual([
+      "agent",
+      "team",
+    ]);
+  });
+
+  it("accepts a team without a URL slug", () => {
+    expect(TeamSchema.safeParse(team).success).toBe(true);
   });
 });

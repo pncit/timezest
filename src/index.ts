@@ -16,7 +16,7 @@ import {
   TeamSchema,
 } from "./entities/schemas";
 import { CONFIG } from "./config/config";
-import { makeRequest } from "./utils/makeRequest";
+import { makeRequest, endpointUrl } from "./utils/makeRequest";
 import { API_ENDPOINTS } from "./constants/endpoints";
 import { buildLogger, withLogging } from "./utils/logger";
 import { makePaginatedRequest } from "./utils/makePaginatedRequest";
@@ -39,7 +39,15 @@ export {
   SchedulingRequestSchema,
   TeamSchema,
 } from "./entities/schemas";
-export { TQL, TQLFilter } from "./utils/tqlFilter";
+export { TimeZestHttpError } from "./utils/handleError";
+export {
+  TQL,
+  TQLFilter,
+  TQL_ATTRIBUTES,
+  type TQLAttribute,
+  type TQLAttributeOf,
+  type TQLEntity,
+} from "./utils/tqlFilter";
 
 /**
  * Options for configuring the TimeZest API.
@@ -153,8 +161,6 @@ export class TimeZestAPI {
     const response = await makePaginatedRequest<Resource>(
       this,
       API_ENDPOINTS.RESOURCES,
-      "GET",
-      null,
       filter,
     );
     return this.validateResponse(response, ResourceSchema);
@@ -169,8 +175,6 @@ export class TimeZestAPI {
     const response = await makePaginatedRequest<Agent>(
       this,
       API_ENDPOINTS.AGENTS,
-      "GET",
-      null,
       filter,
     );
     return this.validateResponse(response, AgentSchema);
@@ -185,8 +189,6 @@ export class TimeZestAPI {
     const response = await makePaginatedRequest<Team>(
       this,
       API_ENDPOINTS.TEAMS,
-      "GET",
-      null,
       filter,
     );
     return this.validateResponse(response, TeamSchema);
@@ -203,8 +205,6 @@ export class TimeZestAPI {
     const response = await makePaginatedRequest<AppointmentType>(
       this,
       API_ENDPOINTS.APPOINTMENT_TYPES,
-      "GET",
-      null,
       filter,
     );
     return this.validateResponse(response, AppointmentTypeSchema);
@@ -219,14 +219,16 @@ export class TimeZestAPI {
     const response = await makeRequest<SchedulingRequest>(
       this.log,
       this.apiKey,
-      this.config.baseUrl,
-      `${API_ENDPOINTS.SCHEDULING_REQUESTS}/${id}`,
+      endpointUrl(
+        this.config.baseUrl,
+        `${API_ENDPOINTS.SCHEDULING_REQUESTS}/${encodeURIComponent(id)}`,
+      ),
       "GET",
       null,
       this.config.maxRetryTimeMs,
       this.config.maxRetryDelayMs,
     );
-    return SchedulingRequestSchema.parse(response);
+    return this.validateOne(response, SchedulingRequestSchema);
   }
 
   /**
@@ -240,8 +242,6 @@ export class TimeZestAPI {
     const response = await makePaginatedRequest<SchedulingRequest>(
       this,
       API_ENDPOINTS.SCHEDULING_REQUESTS,
-      "GET",
-      null,
       filter,
     );
     return this.validateResponse(response, SchedulingRequestSchema);
@@ -258,8 +258,7 @@ export class TimeZestAPI {
     const response = await makeRequest<SchedulingRequest>(
       this.log,
       this.apiKey,
-      this.config.baseUrl,
-      API_ENDPOINTS.SCHEDULING_REQUESTS,
+      endpointUrl(this.config.baseUrl, API_ENDPOINTS.SCHEDULING_REQUESTS),
       "POST",
       data,
       this.config.maxRetryTimeMs,
@@ -279,6 +278,16 @@ export class TimeZestAPI {
       return response.map((item) => schema.parse(item));
     }
     return response;
+  }
+
+  /**
+   * Validates a single API response using its Zod schema if outputValidation is enabled in the config.
+   * @param {T} response - The API response data to validate.
+   * @param {ZodType<T>} schema - The Zod schema to validate against.
+   * @returns {T} The validated or raw response data.
+   */
+  private validateOne<T>(response: T, schema: ZodType<T>): T {
+    return this.config.outputValidation ? schema.parse(response) : response;
   }
 }
 
