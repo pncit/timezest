@@ -1,7 +1,7 @@
-import { makeRequest, endpointUrl } from "./makeRequest";
-import { apiEndpoint } from "../constants/endpoints";
-import { TimeZestAPI } from "../index";
-import { TQLFilter, normalizeFilter } from "./tqlFilter";
+import { makeRequest, endpointUrl } from './makeRequest';
+import { apiEndpoint } from '../constants/endpoints';
+import { TimeZestAPI } from '../index';
+import { TQLFilter, normalizeFilter } from './tqlFilter';
 
 /** One page of a TimeZest list: up to 20 items, and the URL of the next page. */
 type ListPage<T> = { data: T[]; next_page: string | null };
@@ -24,7 +24,7 @@ type ListPage<T> = { data: T[]; next_page: string | null };
 export const makePaginatedRequest = async <T>(
   apiInstance: TimeZestAPI,
   endpoint: apiEndpoint,
-  filter: TQLFilter | string | null = null,
+  filter: TQLFilter | string | null = null
 ): Promise<T[]> => {
   const { log } = apiInstance;
   const apiKey = apiInstance.getApiKey();
@@ -33,30 +33,24 @@ export const makePaginatedRequest = async <T>(
   const query = normalizeFilter(filter);
 
   let results: T[] = [];
-  let url: string | null = endpointUrl(
-    baseUrl,
-    endpoint,
-    query === null ? {} : { filter: query },
-  );
+  let url: string | null = endpointUrl(baseUrl, endpoint, query === null ? {} : { filter: query });
 
   while (url !== null) {
-    log("debug", `Fetching ${url}`);
+    log('debug', `Fetching ${url}`);
     const page: ListPage<T> = await makeRequest<ListPage<T>>(
       log,
       apiKey,
       url,
-      "GET",
+      'GET',
       null,
       maxRetryTimeMs,
-      maxRetryDelayMs,
+      maxRetryDelayMs
     );
     results = results.concat(page.data);
 
     const next = page.next_page;
     if (next !== null && new URL(next).origin !== origin) {
-      throw new Error(
-        `TimeZest named a next page outside ${origin}; it was not followed.`,
-      );
+      throw new Error(`TimeZest named a next page outside ${origin}; it was not followed.`);
     }
     if (next === url) {
       throw new Error(`TimeZest named ${url} as its own next page.`);
@@ -64,6 +58,6 @@ export const makePaginatedRequest = async <T>(
     url = next;
   }
 
-  log("http", `Paginated request to ${endpoint} completed successfully`);
+  log('http', `Paginated request to ${endpoint} completed successfully`);
   return results;
 };

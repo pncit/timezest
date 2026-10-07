@@ -1,27 +1,20 @@
-import { log, LogLevel, Logger } from "./utils/logger";
-import { TimeZestAPIConfig } from "./config/config";
-import {
-  Agent,
-  Resource,
-  AppointmentType,
-  SchedulingRequest,
-  Team,
-  SchedulingRequestPost,
-} from "./entities/entities";
+import { log, LogLevel, Logger } from './utils/logger';
+import { TimeZestAPIConfig } from './config/config';
+import { Agent, Resource, AppointmentType, SchedulingRequest, Team, SchedulingRequestPost } from './entities/entities';
 import {
   ResourceSchema,
   AgentSchema,
   AppointmentTypeSchema,
   SchedulingRequestSchema,
   TeamSchema,
-} from "./entities/schemas";
-import { CONFIG } from "./config/config";
-import { makeRequest, endpointUrl } from "./utils/makeRequest";
-import { API_ENDPOINTS } from "./constants/endpoints";
-import { buildLogger, withLogging } from "./utils/logger";
-import { makePaginatedRequest } from "./utils/makePaginatedRequest";
-import { ZodType } from "zod";
-import { TQLFilter } from "./utils/tqlFilter";
+} from './entities/schemas';
+import { CONFIG } from './config/config';
+import { makeRequest, endpointUrl } from './utils/makeRequest';
+import { API_ENDPOINTS } from './constants/endpoints';
+import { buildLogger, withLogging } from './utils/logger';
+import { makePaginatedRequest } from './utils/makePaginatedRequest';
+import { ZodType } from 'zod';
+import { TQLFilter } from './utils/tqlFilter';
 
 export {
   Agent,
@@ -31,15 +24,15 @@ export {
   SchedulingRequestPost,
   AssociatedEntityPost,
   Team,
-} from "./entities/entities";
+} from './entities/entities';
 export {
   ResourceSchema,
   AgentSchema,
   AppointmentTypeSchema,
   SchedulingRequestSchema,
   TeamSchema,
-} from "./entities/schemas";
-export { TimeZestHttpError } from "./utils/handleError";
+} from './entities/schemas';
+export { TimeZestHttpError } from './utils/handleError';
 export {
   TQL,
   TQLFilter,
@@ -47,7 +40,7 @@ export {
   type TQLAttribute,
   type TQLAttributeOf,
   type TQLEntity,
-} from "./utils/tqlFilter";
+} from './utils/tqlFilter';
 
 /**
  * Options for configuring the TimeZest API.
@@ -94,43 +87,28 @@ export class TimeZestAPI {
       baseUrl: options?.baseUrl || CONFIG.baseUrl,
       maxRetryDelayMs: options?.maxRetryDelayMs || CONFIG.maxRetryDelayMs,
       maxRetryTimeMs: options?.maxRetryTimeMs || CONFIG.maxRetryTimeMs,
-      outputValidation:
-        options?.outputValidation !== undefined
-          ? options.outputValidation
-          : CONFIG.outputValidation,
+      outputValidation: options?.outputValidation !== undefined ? options.outputValidation : CONFIG.outputValidation,
     };
     this.log = buildLogger(this.config.logger, this.config.logLevel);
     // Log the initialization of the API client but remove apiKey
-    this.log("info", "TimeZestAPI initialized");
-    this.log("debug", "TimeZestAPI initialized with custom config", {
+    this.log('info', 'TimeZestAPI initialized');
+    this.log('debug', 'TimeZestAPI initialized with custom config', {
       ...options,
     });
-    this.log("debug", "TimeZestAPI initialized with final config", {
+    this.log('debug', 'TimeZestAPI initialized with final config', {
       ...this.config,
     });
 
     // Wrap methods with logging middleware using the instance's log method
-    this.getResources = withLogging(
-      this.getResources.bind(this),
-      this,
-      "getResources",
-    );
-    this.getAgents = withLogging(this.getAgents.bind(this), this, "getAgents");
-    this.getTeams = withLogging(this.getTeams.bind(this), this, "getTeams");
-    this.getAppointmentTypes = withLogging(
-      this.getAppointmentTypes.bind(this),
-      this,
-      "getAppointmentTypes",
-    );
-    this.getSchedulingRequest = withLogging(
-      this.getSchedulingRequest.bind(this),
-      this,
-      "getSchedulingRequest",
-    );
+    this.getResources = withLogging(this.getResources.bind(this), this, 'getResources');
+    this.getAgents = withLogging(this.getAgents.bind(this), this, 'getAgents');
+    this.getTeams = withLogging(this.getTeams.bind(this), this, 'getTeams');
+    this.getAppointmentTypes = withLogging(this.getAppointmentTypes.bind(this), this, 'getAppointmentTypes');
+    this.getSchedulingRequest = withLogging(this.getSchedulingRequest.bind(this), this, 'getSchedulingRequest');
     this.createSchedulingRequest = withLogging(
       this.createSchedulingRequest.bind(this),
       this,
-      "createSchedulingRequest",
+      'createSchedulingRequest'
     );
   }
 
@@ -155,14 +133,8 @@ export class TimeZestAPI {
    * @param {TQLFilter | string | null} [filter=null] - Optional filter (TQLFilter instance or string) to narrow down results.
    * @returns {Promise<Resource[]>} A promise that resolves to an array of resources.
    */
-  getResources = async (
-    filter: TQLFilter | string | null = null,
-  ): Promise<Resource[]> => {
-    const response = await makePaginatedRequest<Resource>(
-      this,
-      API_ENDPOINTS.RESOURCES,
-      filter,
-    );
+  getResources = async (filter: TQLFilter | string | null = null): Promise<Resource[]> => {
+    const response = await makePaginatedRequest<Resource>(this, API_ENDPOINTS.RESOURCES, filter);
     return this.validateResponse(response, ResourceSchema);
   };
 
@@ -172,11 +144,7 @@ export class TimeZestAPI {
    * @returns {Promise<Agent[]>} A promise that resolves to an array of agents.
    */
   async getAgents(filter: TQLFilter | string | null = null): Promise<Agent[]> {
-    const response = await makePaginatedRequest<Agent>(
-      this,
-      API_ENDPOINTS.AGENTS,
-      filter,
-    );
+    const response = await makePaginatedRequest<Agent>(this, API_ENDPOINTS.AGENTS, filter);
     return this.validateResponse(response, AgentSchema);
   }
 
@@ -186,11 +154,7 @@ export class TimeZestAPI {
    * @returns {Promise<Team[]>} A promise that resolves to an array of teams.
    */
   async getTeams(filter: TQLFilter | string | null = null): Promise<Team[]> {
-    const response = await makePaginatedRequest<Team>(
-      this,
-      API_ENDPOINTS.TEAMS,
-      filter,
-    );
+    const response = await makePaginatedRequest<Team>(this, API_ENDPOINTS.TEAMS, filter);
     return this.validateResponse(response, TeamSchema);
   }
 
@@ -199,14 +163,8 @@ export class TimeZestAPI {
    * @param {TQLFilter | string | null} [filter=null] - Optional filter (TQLFilter instance or string) to narrow down results.
    * @returns {Promise<AppointmentType[]>} A promise that resolves to an array of appointment types.
    */
-  async getAppointmentTypes(
-    filter: TQLFilter | string | null = null,
-  ): Promise<AppointmentType[]> {
-    const response = await makePaginatedRequest<AppointmentType>(
-      this,
-      API_ENDPOINTS.APPOINTMENT_TYPES,
-      filter,
-    );
+  async getAppointmentTypes(filter: TQLFilter | string | null = null): Promise<AppointmentType[]> {
+    const response = await makePaginatedRequest<AppointmentType>(this, API_ENDPOINTS.APPOINTMENT_TYPES, filter);
     return this.validateResponse(response, AppointmentTypeSchema);
   }
 
@@ -219,14 +177,11 @@ export class TimeZestAPI {
     const response = await makeRequest<SchedulingRequest>(
       this.log,
       this.apiKey,
-      endpointUrl(
-        this.config.baseUrl,
-        `${API_ENDPOINTS.SCHEDULING_REQUESTS}/${encodeURIComponent(id)}`,
-      ),
-      "GET",
+      endpointUrl(this.config.baseUrl, `${API_ENDPOINTS.SCHEDULING_REQUESTS}/${encodeURIComponent(id)}`),
+      'GET',
       null,
       this.config.maxRetryTimeMs,
-      this.config.maxRetryDelayMs,
+      this.config.maxRetryDelayMs
     );
     return this.validateOne(response, SchedulingRequestSchema);
   }
@@ -236,14 +191,8 @@ export class TimeZestAPI {
    * @param {TQLFilter | string | null} [filter=null] - Optional filter (TQLFilter instance or string) to narrow down results.
    * @returns {Promise<SchedulingRequest[]>} A promise that resolves to an array of scheduling requests.
    */
-  async getSchedulingRequests(
-    filter: TQLFilter | string | null = null,
-  ): Promise<SchedulingRequest[]> {
-    const response = await makePaginatedRequest<SchedulingRequest>(
-      this,
-      API_ENDPOINTS.SCHEDULING_REQUESTS,
-      filter,
-    );
+  async getSchedulingRequests(filter: TQLFilter | string | null = null): Promise<SchedulingRequest[]> {
+    const response = await makePaginatedRequest<SchedulingRequest>(this, API_ENDPOINTS.SCHEDULING_REQUESTS, filter);
     return this.validateResponse(response, SchedulingRequestSchema);
   }
 
@@ -252,17 +201,15 @@ export class TimeZestAPI {
    * @param {SchedulingRequestPost} data - The data for the new scheduling request.
    * @returns {Promise<SchedulingRequest>} A promise that resolves to the created scheduling request.
    */
-  async createSchedulingRequest(
-    data: SchedulingRequestPost,
-  ): Promise<SchedulingRequest> {
+  async createSchedulingRequest(data: SchedulingRequestPost): Promise<SchedulingRequest> {
     const response = await makeRequest<SchedulingRequest>(
       this.log,
       this.apiKey,
       endpointUrl(this.config.baseUrl, API_ENDPOINTS.SCHEDULING_REQUESTS),
-      "POST",
+      'POST',
       data,
       this.config.maxRetryTimeMs,
-      this.config.maxRetryDelayMs,
+      this.config.maxRetryDelayMs
     );
     return response;
   }

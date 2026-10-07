@@ -18,19 +18,14 @@ export type apiEndpoints = {
   SCHEDULING_REQUESTS: apiEndpoint;
 };
 
-export type BaseApiEndpoint =
-  | "/resources"
-  | "/agents"
-  | "/teams"
-  | "/appointment_types"
-  | "/scheduling_requests";
+export type BaseApiEndpoint = '/resources' | '/agents' | '/teams' | '/appointment_types' | '/scheduling_requests';
 
 export type apiEndpoint = BaseApiEndpoint | `${BaseApiEndpoint}/${string}`;
 
 export const API_ENDPOINTS: apiEndpoints = {
-  RESOURCES: "/resources",
-  AGENTS: "/agents",
-  TEAMS: "/teams",
-  APPOINTMENT_TYPES: "/appointment_types",
-  SCHEDULING_REQUESTS: "/scheduling_requests",
+  RESOURCES: '/resources',
+  AGENTS: '/agents',
+  TEAMS: '/teams',
+  APPOINTMENT_TYPES: '/appointment_types',
+  SCHEDULING_REQUESTS: '/scheduling_requests',
 };

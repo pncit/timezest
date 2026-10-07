@@ -1,6 +1,6 @@
 {
   "name": "timezest",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "main": "dist/index.js",
   "files": [
     "dist",
@@ -12,8 +12,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "format": "prettier --write .",
-    "lint": "eslint src",
+    "format": "prettier --config .prettierrc --write src vitest.config.mts tsconfig.json tsconfig.build.json package.json",
+    "lint": "prettier --config .prettierrc --check src vitest.config.mts tsconfig.json tsconfig.build.json package.json",
     "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
@@ -29,14 +29,9 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@types/node": "^26.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^10.5.0",
-    "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.5.3",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^5.0.1"
   },
   "repository": {

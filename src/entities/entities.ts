@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 import {
   AgentSchema,
   AppointmentTypeSchema,
@@ -7,7 +7,7 @@ import {
   SchedulingRequestPostSchema,
   SchedulingRequestSchema,
   TeamSchema,
-} from "./schemas";
+} from './schemas';
 
 /** The entity types, inferred from the schemas so the two cannot disagree. */
 export type Agent = z.infer<typeof AgentSchema>;

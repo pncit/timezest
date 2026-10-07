@@ -37,47 +37,34 @@
  * `appointment_type_id`, which it does not document.
  */
 export const TQL_ATTRIBUTES = {
-  agent: [
-    "name",
-    "email",
-    "role",
-    "schedulable",
-    "two_factor_enabled",
-    "url_slug",
-    "created_at",
-  ],
-  team: ["internal_name", "external_name", "url_slug"],
-  resource: ["internal_name", "external_name", "url_slug"],
-  appointment_type: [
-    "internal_name",
-    "external_name",
-    "duration_mins",
-    "url_slug",
-  ],
+  agent: ['name', 'email', 'role', 'schedulable', 'two_factor_enabled', 'url_slug', 'created_at'],
+  team: ['internal_name', 'external_name', 'url_slug'],
+  resource: ['internal_name', 'external_name', 'url_slug'],
+  appointment_type: ['internal_name', 'external_name', 'duration_mins', 'url_slug'],
   scheduling_request: [
-    "autotask_company_id",
-    "autotask_contact_id",
-    "autotask_ticket_number",
-    "connectwise_psa_company_id",
-    "connectwise_psa_contact_id",
-    "connectwise_psa_ticket_number",
-    "connectwise_psa_project_ticket_number",
-    "connectwise_psa_service_ticket_number",
-    "halo_psa_client_id",
-    "halo_psa_user_id",
-    "halo_psa_ticket_number",
-    "service_now_task_number",
-    "service_now_task_id",
-    "service_now_contact_id",
-    "end_user_name",
-    "end_user_email",
-    "status",
-    "selected_start_time",
-    "scheduled_at",
-    "created_at",
-    "appointment_type_id",
-    "agent",
-    "team",
+    'autotask_company_id',
+    'autotask_contact_id',
+    'autotask_ticket_number',
+    'connectwise_psa_company_id',
+    'connectwise_psa_contact_id',
+    'connectwise_psa_ticket_number',
+    'connectwise_psa_project_ticket_number',
+    'connectwise_psa_service_ticket_number',
+    'halo_psa_client_id',
+    'halo_psa_user_id',
+    'halo_psa_ticket_number',
+    'service_now_task_number',
+    'service_now_task_id',
+    'service_now_contact_id',
+    'end_user_name',
+    'end_user_email',
+    'status',
+    'selected_start_time',
+    'scheduled_at',
+    'created_at',
+    'appointment_type_id',
+    'agent',
+    'team',
   ],
 } as const;
 
@@ -85,25 +72,14 @@ export const TQL_ATTRIBUTES = {
 export type TQLEntity = keyof typeof TQL_ATTRIBUTES;
 
 /** The attributes `E` can be filtered on, without the entity prefix. */
-export type TQLAttributeOf<E extends TQLEntity> =
-  (typeof TQL_ATTRIBUTES)[E][number];
+export type TQLAttributeOf<E extends TQLEntity> = (typeof TQL_ATTRIBUTES)[E][number];
 
 /** Every filterable attribute, with its entity prefix: `scheduling_request.status`. */
 export type TQLAttribute = {
   [E in TQLEntity]: `${E}.${TQLAttributeOf<E>}`;
 }[TQLEntity];
 
-type TQLOperator =
-  | "EQ"
-  | "NOT_EQ"
-  | "LIKE"
-  | "NOT_LIKE"
-  | "IN"
-  | "NOT_IN"
-  | "GT"
-  | "GTE"
-  | "LT"
-  | "LTE";
+type TQLOperator = 'EQ' | 'NOT_EQ' | 'LIKE' | 'NOT_LIKE' | 'IN' | 'NOT_IN' | 'GT' | 'GTE' | 'LT' | 'LTE';
 
 interface TQLPredicate {
   attribute: string;
@@ -145,11 +121,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * Adds a completed predicate and starts a new one.
    */
   private finalizePredicate(): void {
-    if (
-      this.currentAttribute &&
-      this.currentOperator !== null &&
-      this.currentValue !== null
-    ) {
+    if (this.currentAttribute && this.currentOperator !== null && this.currentValue !== null) {
       this.predicates.push({
         attribute: this.currentAttribute,
         operator: this.currentOperator,
@@ -164,14 +136,9 @@ export class TQLFilter<TAttribute extends string = string> {
   /**
    * Sets the operator and value for comparison operations.
    */
-  private setComparison(
-    operator: TQLOperator,
-    value: string | number | string[] | number[],
-  ): this {
+  private setComparison(operator: TQLOperator, value: string | number | string[] | number[]): this {
     if (!this.currentAttribute) {
-      throw new Error(
-        "Must call filter() or and() before using comparison operators",
-      );
+      throw new Error('Must call filter() or and() before using comparison operators');
     }
     this.currentOperator = operator;
     this.currentValue = value;
@@ -185,7 +152,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The value to compare against
    */
   eq(value: string | number): this {
-    return this.setComparison("EQ", value);
+    return this.setComparison('EQ', value);
   }
 
   /**
@@ -193,7 +160,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The value to compare against
    */
   notEq(value: string | number): this {
-    return this.setComparison("NOT_EQ", value);
+    return this.setComparison('NOT_EQ', value);
   }
 
   /**
@@ -201,7 +168,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The pattern to match against
    */
   like(value: string): this {
-    return this.setComparison("LIKE", value);
+    return this.setComparison('LIKE', value);
   }
 
   /**
@@ -209,7 +176,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The pattern to exclude
    */
   notLike(value: string): this {
-    return this.setComparison("NOT_LIKE", value);
+    return this.setComparison('NOT_LIKE', value);
   }
 
   /**
@@ -218,9 +185,9 @@ export class TQLFilter<TAttribute extends string = string> {
    */
   in(values: string[] | number[]): this {
     if (!Array.isArray(values) || values.length === 0) {
-      throw new Error("IN operator requires a non-empty array");
+      throw new Error('IN operator requires a non-empty array');
     }
-    return this.setComparison("IN", values);
+    return this.setComparison('IN', values);
   }
 
   /**
@@ -229,9 +196,9 @@ export class TQLFilter<TAttribute extends string = string> {
    */
   notIn(values: string[] | number[]): this {
     if (!Array.isArray(values) || values.length === 0) {
-      throw new Error("NOT_IN operator requires a non-empty array");
+      throw new Error('NOT_IN operator requires a non-empty array');
     }
-    return this.setComparison("NOT_IN", values);
+    return this.setComparison('NOT_IN', values);
   }
 
   // Numeric/timestamp comparison operators
@@ -240,7 +207,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The value to compare against
    */
   gt(value: number): this {
-    return this.setComparison("GT", value);
+    return this.setComparison('GT', value);
   }
 
   /**
@@ -248,7 +215,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The value to compare against
    */
   gte(value: number): this {
-    return this.setComparison("GTE", value);
+    return this.setComparison('GTE', value);
   }
 
   /**
@@ -256,7 +223,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The value to compare against
    */
   lt(value: number): this {
-    return this.setComparison("LT", value);
+    return this.setComparison('LT', value);
   }
 
   /**
@@ -264,7 +231,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @param value - The value to compare against
    */
   lte(value: number): this {
-    return this.setComparison("LTE", value);
+    return this.setComparison('LTE', value);
   }
 
   /**
@@ -273,7 +240,7 @@ export class TQLFilter<TAttribute extends string = string> {
    */
   and(attribute: TAttribute): this {
     if (this.predicates.length === 0) {
-      throw new Error("Must have at least one predicate before using AND");
+      throw new Error('Must have at least one predicate before using AND');
     }
     this.currentAttribute = this.path(attribute);
     return this;
@@ -286,7 +253,7 @@ export class TQLFilter<TAttribute extends string = string> {
   private formatValue(value: string | number | string[] | number[]): string {
     if (Array.isArray(value)) {
       // Arrays are comma-separated (no spaces) according to TQL spec
-      return value.map((v) => this.formatSingleValue(v)).join(",");
+      return value.map((v) => this.formatSingleValue(v)).join(',');
     }
     return this.formatSingleValue(value);
   }
@@ -295,14 +262,14 @@ export class TQLFilter<TAttribute extends string = string> {
    * Formats a single value for TQL output.
    */
   private formatSingleValue(value: string | number): string {
-    if (typeof value === "number") {
+    if (typeof value === 'number') {
       return String(value);
     }
 
     // Strings containing spaces, commas, tildes, backslashes, or quotes should be enclosed in quotes
-    if (/[\s,~"\\]/.test(value) || value === "") {
+    if (/[\s,~"\\]/.test(value) || value === '') {
       // Escape backslashes and quotes in the value to prevent injection issues
-      const escaped = value.replace(/[\\"]/g, "\\$&");
+      const escaped = value.replace(/[\\"]/g, '\\$&');
       return `"${escaped}"`;
     }
 
@@ -317,14 +284,14 @@ export class TQLFilter<TAttribute extends string = string> {
    * @returns The string with spaces outside quotes replaced by tildes
    */
   private replaceSpacesOutsideQuotes(str: string): string {
-    let result = "";
+    let result = '';
     let insideQuotes = false;
     let i = 0;
 
     while (i < str.length) {
       const char = str[i];
 
-      if (char === "\\" && insideQuotes && i + 1 < str.length) {
+      if (char === '\\' && insideQuotes && i + 1 < str.length) {
         // Handle escaped characters (like \")
         result += char + str[i + 1];
         i += 2;
@@ -337,7 +304,7 @@ export class TQLFilter<TAttribute extends string = string> {
         result += char;
       } else if (/\s/.test(char)) {
         // Only replace whitespace if we're NOT inside quotes
-        result += insideQuotes ? char : "~";
+        result += insideQuotes ? char : '~';
       } else {
         result += char;
       }
@@ -350,19 +317,14 @@ export class TQLFilter<TAttribute extends string = string> {
 
   /** The predicates, finalized, each as `attribute OPERATOR value`. */
   private predicateStrings(): string[] {
-    if (
-      this.currentAttribute &&
-      this.currentOperator !== null &&
-      this.currentValue !== null
-    ) {
+    if (this.currentAttribute && this.currentOperator !== null && this.currentValue !== null) {
       this.finalizePredicate();
     }
     if (this.predicates.length === 0) {
-      throw new Error("Filter must have at least one predicate");
+      throw new Error('Filter must have at least one predicate');
     }
     return this.predicates.map(
-      (predicate) =>
-        `${predicate.attribute} ${predicate.operator} ${this.formatValue(predicate.value)}`,
+      (predicate) => `${predicate.attribute} ${predicate.operator} ${this.formatValue(predicate.value)}`
     );
   }
 
@@ -373,9 +335,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * @returns The TQL filter string
    */
   toString(): string {
-    return this.replaceSpacesOutsideQuotes(
-      this.predicateStrings().join(" AND "),
-    );
+    return this.replaceSpacesOutsideQuotes(this.predicateStrings().join(' AND '));
   }
 
   /**
@@ -383,7 +343,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * read a filter of more than one predicate in this form; send `toString()`.
    */
   toHumanReadableString(): string {
-    return this.predicateStrings().join(" AND ");
+    return this.predicateStrings().join(' AND ');
   }
 
   /**
@@ -398,7 +358,7 @@ export class TQLFilter<TAttribute extends string = string> {
    * Custom primitive conversion for string contexts.
    * Allows TQLFilter to be used directly in places expecting strings.
    */
-  [Symbol.toPrimitive](_hint: "string" | "number" | "default"): string {
+  [Symbol.toPrimitive](_hint: 'string' | 'number' | 'default'): string {
     return this.toString();
   }
 }
@@ -409,13 +369,11 @@ export class TQLFilter<TAttribute extends string = string> {
  * @param filter - The filter value (TQLFilter, string, or null)
  * @returns The normalized filter string or null
  */
-export function normalizeFilter(
-  filter: TQLFilter | string | null,
-): string | null {
+export function normalizeFilter(filter: TQLFilter | string | null): string | null {
   if (filter === null) {
     return null;
   }
-  if (typeof filter === "string") {
+  if (typeof filter === 'string') {
     return filter;
   }
   // filter is a TQLFilter instance
@@ -472,8 +430,8 @@ export class TQL {
    * TQL.forAgents().filter('email').eq('user@example.com')
    * ```
    */
-  static forAgents(): TypedTQLFilterBuilder<"agent"> {
-    return new TypedTQLFilterBuilder("agent");
+  static forAgents(): TypedTQLFilterBuilder<'agent'> {
+    return new TypedTQLFilterBuilder('agent');
   }
 
   /**
@@ -486,8 +444,8 @@ export class TQL {
    * TQL.forResources().filter('url_slug').eq('front-desk')
    * ```
    */
-  static forResources(): TypedTQLFilterBuilder<"resource"> {
-    return new TypedTQLFilterBuilder("resource");
+  static forResources(): TypedTQLFilterBuilder<'resource'> {
+    return new TypedTQLFilterBuilder('resource');
   }
 
   /**
@@ -500,8 +458,8 @@ export class TQL {
    * TQL.forTeams().filter('external_name').like('support')
    * ```
    */
-  static forTeams(): TypedTQLFilterBuilder<"team"> {
-    return new TypedTQLFilterBuilder("team");
+  static forTeams(): TypedTQLFilterBuilder<'team'> {
+    return new TypedTQLFilterBuilder('team');
   }
 
   /**
@@ -514,8 +472,8 @@ export class TQL {
    * TQL.forAppointmentTypes().filter('duration_mins').gte(30)
    * ```
    */
-  static forAppointmentTypes(): TypedTQLFilterBuilder<"appointment_type"> {
-    return new TypedTQLFilterBuilder("appointment_type");
+  static forAppointmentTypes(): TypedTQLFilterBuilder<'appointment_type'> {
+    return new TypedTQLFilterBuilder('appointment_type');
   }
 
   /**
@@ -530,8 +488,8 @@ export class TQL {
    * TQL.forSchedulingRequests().filter('team').in(['team_1', 'team_2'])
    * ```
    */
-  static forSchedulingRequests(): TypedTQLFilterBuilder<"scheduling_request"> {
-    return new TypedTQLFilterBuilder("scheduling_request");
+  static forSchedulingRequests(): TypedTQLFilterBuilder<'scheduling_request'> {
+    return new TypedTQLFilterBuilder('scheduling_request');
   }
 }
 

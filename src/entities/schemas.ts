@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * The shapes the TimeZest API returns, as it returns them. A field TimeZest
@@ -8,7 +8,7 @@ import { z } from "zod";
 
 export const AgentSchema = z.object({
   id: z.string(),
-  object: z.literal("agent"),
+  object: z.literal('agent'),
   name: z.string(),
   email: z.string(),
   role: z.string(),
@@ -21,7 +21,7 @@ export const AgentSchema = z.object({
 
 export const TeamSchema = z.object({
   id: z.string(),
-  object: z.literal("team"),
+  object: z.literal('team'),
   internal_name: z.string(),
   external_name: z.string(),
   team_type: z.string(),
@@ -31,10 +31,7 @@ export const TeamSchema = z.object({
 });
 
 /** A schedulable resource: an agent or a team, told apart by `object`. */
-export const ResourceSchema = z.discriminatedUnion("object", [
-  AgentSchema,
-  TeamSchema,
-]);
+export const ResourceSchema = z.discriminatedUnion('object', [AgentSchema, TeamSchema]);
 
 export const AppointmentTypeSchema = z.object({
   id: z.string(),
@@ -70,7 +67,7 @@ export const AssociatedEntitySchema = z.object({
  */
 export const SchedulingRequestSchema = z.object({
   id: z.string(),
-  object: z.literal("scheduling_request"),
+  object: z.literal('scheduling_request'),
   appointment_type_id: z.string(),
   end_user_email: z.string(),
   end_user_name: z.string(),
